@@ -39,6 +39,7 @@ async function run(){
         const slotBooked=alreadyBooked.filter(book=>book.treatment===slot.name)
         const timeSlot=slotBooked.map(book=>book.slot)
         console.log(slotBooked,timeSlot)
+        
       })
       res.send(slots)
     })
