@@ -26,12 +26,29 @@ const client = new MongoClient(uri, {
 async function run(){
   try{
     const appointmentOptionCollection=client.db('doctorAppoinment').collection('appointmentCollection')
+    const bookingCollection=client.db('doctorAppoinment').collection('bookCollection')
 
     app.get('/appointment',async(req,res)=>{
+       const date=req.query.date
+       console.log(date)
       const query={}
       const slots=await appointmentOptionCollection.find(query).toArray()
+      const bookingQuery={appointmentDate : date}
+      const alreadyBooked=await bookingCollection.find(bookingQuery).toArray()
+      slots.forEach(slot=>{
+        const slotBooked=alreadyBooked.filter(book=>book.treatment===slot.name)
+        const timeSlot=slotBooked.map(book=>book.slot)
+        console.log(slotBooked,timeSlot)
+      })
       res.send(slots)
     })
+    app.post('/bookings',async(req,res)=>{
+      const booking=req.body
+      //console.log(booking)
+      const result=await bookingCollection.insertOne(booking)
+      res.send(result)
+    })
+
   }
   finally{
   
