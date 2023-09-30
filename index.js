@@ -32,16 +32,18 @@ async function run(){
        const date=req.query.date
        console.log(date)
       const query={}
-      const slots=await appointmentOptionCollection.find(query).toArray()
+      const allAppointmentOptions=await appointmentOptionCollection.find(query).toArray() //getting all options for appointment
       const bookingQuery={appointmentDate : date}
-      const alreadyBooked=await bookingCollection.find(bookingQuery).toArray()
-      slots.forEach(slot=>{
-        const slotBooked=alreadyBooked.filter(book=>book.treatment===slot.name)
-        const timeSlot=slotBooked.map(book=>book.slot)
-        console.log(slotBooked,timeSlot)
+      const alreadyBooked=await bookingCollection.find(bookingQuery).toArray() // getting all the booking from database
+      allAppointmentOptions.forEach(appointmentOption=>{
+        const appointmentBooked=alreadyBooked.filter(book=>book.treatment===appointmentOption.name) //distincting all the bookings according to treatment name
+        const timeSlot=appointmentBooked.map(book=>book.slot) //getting the selected slot time
+        const remainingtimeSlots= appointmentOption.slots.filter(slot=>!timeSlot.includes(slot))
+        appointmentOption.slots=remainingtimeSlots; // setting the new remainingslot to the available slot of appointment options
+        console.log(date,appointmentOption.name,timeSlot,remainingtimeSlots.length)
         
       })
-      res.send(slots)
+      res.send(allAppointmentOptions)
     })
     app.post('/bookings',async(req,res)=>{
       const booking=req.body
