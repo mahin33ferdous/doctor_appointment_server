@@ -40,14 +40,37 @@ async function run(){
         const timeSlot=appointmentBooked.map(book=>book.slot) //getting the selected slot time
         const remainingtimeSlots= appointmentOption.slots.filter(slot=>!timeSlot.includes(slot))
         appointmentOption.slots=remainingtimeSlots; // setting the new remainingslot to the available slot of appointment options
-        console.log(date,appointmentOption.name,timeSlot,remainingtimeSlots.length)
+        //console.log(date,appointmentOption.name,timeSlot,remainingtimeSlots.length)
         
       })
       res.send(allAppointmentOptions)
     })
+    
+    app.get('/bookings',async(req,res)=>{
+      const email=req.query.email
+      console.log(email)
+      const query={email : email}
+      const myAllBooking= await bookingCollection.find(query).toArray()
+      res.send(myAllBooking)
+      //console.log(myAllBooking)
+    })
+
     app.post('/bookings',async(req,res)=>{
       const booking=req.body
-      //console.log(booking)
+      const query={  // query for limiting one booking per day for a user
+        appointmentDate:booking.appointmentDate,
+        treatment : booking.treatment,
+        email: booking.email
+      }
+      
+      const thisUserBooked=await bookingCollection.find(query).toArray()
+      console.log(thisUserBooked)
+      if(thisUserBooked.length)
+      {
+        const message=`you have already a booking at ${booking.appointmentDate}`
+        return res.send({acknowledged: false, message})
+      }
+      
       const result=await bookingCollection.insertOne(booking)
       res.send(result)
     })
