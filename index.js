@@ -27,6 +27,7 @@ async function run(){
   try{
     const appointmentOptionCollection=client.db('doctorAppoinment').collection('appointmentCollection')
     const bookingCollection=client.db('doctorAppoinment').collection('bookCollection')
+    const UserCollection=client.db('doctorAppoinment').collection('UserCollection')
 
     app.get('/appointment',async(req,res)=>{
        const date=req.query.date
@@ -73,6 +74,14 @@ async function run(){
       
       const result=await bookingCollection.insertOne(booking)
       res.send(result)
+    })
+
+    //creating user collection on the database
+    app.post('/users',async(req,res)=>{
+      const user=req.body
+      const result= await UserCollection.insertOne(user)
+      res.send(result)
+
     })
 
   }
