@@ -2,6 +2,7 @@ const express=require('express')
 const cors=require('cors')
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config()
+var jwt = require('jsonwebtoken');
 const port=process.env.PORT || 5000
 
 const app=express()
@@ -9,7 +10,6 @@ const app=express()
 //middleware
 app.use(cors());
 app.use(express.json())
-
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.2qayojn.mongodb.net/?retryWrites=true&w=majority`;
@@ -22,6 +22,28 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+function verifyJWT(req,res,next){
+  console.log('token',req.headers.authorization) //got the access token from booking display /fetching function client side
+  const headerAuthorization=req.headers.authorization;
+ 
+  if(!headerAuthorization)
+  {
+    return res.status(401).send('unauthorized token')
+
+    
+  }
+  const token=headerAuthorization.split(' ')[1] //the token string will get split on second word
+  console.log('kkt',token)
+
+  jwt.verify(token,process.env.ACCESS_TOKEN, function(err, decoded) {
+   if(err){
+    return res.status(403).send({message:'forbidden access'})
+   }
+   req.decoded=decoded;
+   next() // must be called here 
+  });
+}
 
 async function run(){
   try{
@@ -46,10 +68,29 @@ async function run(){
       })
       res.send(allAppointmentOptions)
     })
-    
-    app.get('/bookings',async(req,res)=>{
+//accessToken created for sign in user with email query
+    app.get('/jwt',async(req,res)=>{ 
       const email=req.query.email
       console.log(email)
+
+      const query={email : email}
+      const user= await UserCollection.findOne(query)
+      console.log(user)
+      if(user){
+        const token=jwt.sign({email}, process.env.ACCESS_TOKEN, { expiresIn: '1h' });//decoded into jwt.verify()
+        return  res.send({accessToken: token}) //forgot to return
+      }
+      return res.status(403).send({accessToken:''})
+      
+    })
+    
+    app.get('/bookings',verifyJWT,async(req,res)=>{// verifyJWT ,middleware calling for this booking api with  (?email=) query to decode the email to make it secure
+      const email=req.query.email
+      console.log(email)
+      const decodedEmail=req.decoded.email // getting decoded email token=jwt.sign({})-> jwt.verify()
+      if(email!==decodedEmail){ //bookings?email=xyz@gmail.com will not load data cause email will be decoded
+        return res.status(403).send({message:'forbidden access'})
+      }
       const query={email : email}
       const myAllBooking= await bookingCollection.find(query).toArray()
       res.send(myAllBooking)
