@@ -1,6 +1,6 @@
 const express=require('express')
 const cors=require('cors')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 var jwt = require('jsonwebtoken');
 const port=process.env.PORT || 5000
@@ -120,6 +120,26 @@ async function run(){
       const query={}
       const users= await UserCollection.find(query).toArray()
       res.send(users)
+
+    })
+//creating admin role
+    app.put('/users/admin/:id',verifyJWT,async(req,res)=>{
+      const decodedEmail=req.decoded.email 
+      const query={email : decodedEmail}
+      const user= await UserCollection.findOne(query)
+      if(user?.role!=='admin'){
+        return res.status(403).send({message:'forbidden user role access'})
+      }
+      const id=req.params.id
+      const filter={_id: new ObjectId(id)}
+      const action={upsert: true}
+      const updateData={
+        $set:{
+          role: 'admin'
+        }
+      }
+      const result= await UserCollection.updateOne(filter,updateData,action)
+      res.send(result)
 
     })
 
