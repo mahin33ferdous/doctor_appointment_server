@@ -63,7 +63,7 @@ async function run(){
         const timeSlot=appointmentBooked.map(book=>book.slot) //getting the selected slot time
         const remainingtimeSlots= appointmentOption.slots.filter(slot=>!timeSlot.includes(slot))
         appointmentOption.slots=remainingtimeSlots; // setting the new remainingslot to the available slot of appointment options
-        //console.log(date,appointmentOption.name,timeSlot,remainingtimeSlots.length)
+        console.log(date,appointmentOption.name,timeSlot,remainingtimeSlots.length)
         
       })
       res.send(allAppointmentOptions)
@@ -116,6 +116,13 @@ async function run(){
       const result=await bookingCollection.insertOne(booking)
       res.send(result)
     })
+    app.get('/users',async(req,res)=>{
+      const query={}
+      const users= await UserCollection.find(query).toArray()
+      res.send(users)
+
+    })
+
 
     //creating user collection on the database
     app.post('/users',async(req,res)=>{
