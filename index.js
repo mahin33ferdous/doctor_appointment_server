@@ -128,7 +128,7 @@ async function run(){
       const query={email : decodedEmail}
       const user= await UserCollection.findOne(query)
       if(user?.role!=='admin'){
-        return res.status(403).send({message:'forbidden user role access'})
+        return res.status(403).send({message:'forbidden user role access', modified: false})
       }
       const id=req.params.id
       const filter={_id: new ObjectId(id)}
@@ -142,6 +142,21 @@ async function run(){
       res.send(result)
 
     })
+
+    //temporary update to insert price field on database
+    app.get('/addPrice',async(req,res)=>{
+      const query={}
+      const action={upsert: true}
+      const updateData={
+        $set:{
+          price: 999
+        }
+       }
+
+       const result= await appointmentOptionCollection.updateMany(query,updateData,action)
+      res.send(result)
+    })
+
 
 
     //creating user collection on the database
